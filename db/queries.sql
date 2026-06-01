@@ -20,7 +20,7 @@ UPDATE students
 SET phone_number = '88005555' 
 WHERE first_name = 'Судак' AND last_name = 'Валерий';
 
-
+-- 5. Левое соединение
 SELECT 
     d.name AS 'Кафедра',
     d.budget AS 'Бюджет',
