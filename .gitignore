@@ -1,0 +1,26 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.sln.docstates
+*.userprefs
+packages/
+*.nupkg
+**/[Rr]elease*/
+**/[Dd]ebug*/
+*.DotSettings
+.vs/
+*.csproj.user
+*.dbmdl
+*.jfm
+
+## OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+## IDE
+.idea/
+*.swp
+*~
