@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="orm/Orm.csproj" Id="ccddbe92-bc8e-442f-bcd6-57d76533d915" />
+  <Project Path="web/api/TimeTrackingApp.Api/TimeTrackingApp.Api.csproj" Id="56a31780-bc6a-4861-a2d9-161f78149a73" />
+  <Project Path="web/api/TimeTrackingApp.BL/TimeTrackingApp.BL.csproj" Id="afb2028d-e0a9-4213-b6e7-e9abc5fd6e36" />
+  <Project Path="web/api/TimeTrackingApp.DAL/TimeTrackingApp.DAL.csproj" Id="fb5505ab-2d25-4e31-b668-779219e159e4" />
 </Solution>
