@@ -1,28 +1,12 @@
 using Serilog;
-using TimeTrackingApp.Api.Exceptions;
+using TimeTrackingApp.Api.Extensions;
 using TimeTrackingApp.Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, config) => config.ReadFrom.Configuration(context.Configuration));
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
-    {
-        Title = "TimeTracker API",
-        Version = "v1",
-        Description = "API для веб-приложения учета рабочего времени сотрудников компании",
-        Contact = new Microsoft.OpenApi.OpenApiContact
-        {
-            Name = "Radmir Mergaliev",
-            Url = new Uri("https://t.me/Mergalievr")
-        }
-    });
-});
+
+builder.Services.AddPresentationServices(builder.Configuration);
 
 var app = builder.Build();
 
