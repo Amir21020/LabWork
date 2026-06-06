@@ -1,10 +1,12 @@
 using Serilog;
-using TimeTrackingApp.Api.Middlewars;
+using TimeTrackingApp.Api.Exceptions;
+using TimeTrackingApp.Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, config) => config.ReadFrom.Configuration(context.Configuration));
-
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -36,6 +38,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseSerilogRequestLogging();
 app.UseMiddleware<RequestContextLoggingMiddleware>();
+
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 

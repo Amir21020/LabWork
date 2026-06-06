@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Primitives;
 using Serilog.Context;
 
-namespace TimeTrackingApp.Api.Middlewars;
+namespace TimeTrackingApp.Api.Middlewares;
 
 public sealed class RequestContextLoggingMiddleware(RequestDelegate next) 
 {
