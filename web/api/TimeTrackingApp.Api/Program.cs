@@ -1,6 +1,5 @@
 using Serilog;
 using TimeTrackingApp.Api.Extensions;
-using TimeTrackingApp.Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,22 +9,13 @@ builder.Services.AddPresentationServices(builder.Configuration);
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty; 
-    });
-}
-
-app.UseSerilogRequestLogging();
-app.UseMiddleware<RequestContextLoggingMiddleware>();
+app.UseSwaggerDocs();
 
 app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
+
+app.UseCustomRequestLogging();
 
 app.MapControllers();
 
