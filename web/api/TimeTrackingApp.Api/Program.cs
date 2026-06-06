@@ -1,4 +1,9 @@
+using Serilog;
+using TimeTrackingApp.Api.Middlewars;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, config) => config.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -28,6 +33,9 @@ if (app.Environment.IsDevelopment())
         options.RoutePrefix = string.Empty; 
     });
 }
+
+app.UseSerilogRequestLogging();
+app.UseMiddleware<RequestContextLoggingMiddleware>();
 
 app.UseHttpsRedirection();
 
