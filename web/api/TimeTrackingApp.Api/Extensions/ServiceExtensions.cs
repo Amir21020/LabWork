@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using TimeTrackingApp.Api.Exceptions;
+using TimeTrackingApp.Api.Filters;
 using TimeTrackingApp.BL.Interfaces;
 using TimeTrackingApp.BL.Services;
+using TimeTrackingApp.BL.Validators;
 using TimeTrackingApp.DAL.Data;
 using TimeTrackingApp.DAL.Entities;
 using TimeTrackingApp.DAL.Interfaces;
@@ -17,8 +20,10 @@ public static class ServiceExtensions
 
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
-
-        services.AddControllers();
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<ValidationFilter>();
+        });
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(options =>
         {
@@ -41,6 +46,8 @@ public static class ServiceExtensions
     public static IServiceCollection AddBusinessLogic(this IServiceCollection services)
     {
         services.AddScoped<IProjectService, ProjectService>();
+        services.AddValidatorsFromAssembly(typeof(CreateProjectRequestValidator).Assembly);
+
         return services;
     }
 

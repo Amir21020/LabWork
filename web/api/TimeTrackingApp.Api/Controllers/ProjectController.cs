@@ -14,4 +14,13 @@ public sealed class ProjectController(IProjectService projectService) : BaseCont
 
         return Ok(projects);
     }
+
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<ActionResult> CreateProjectAsync([FromBody] CreateProjectRequest request, CancellationToken ct = default)
+    {
+        await projectService.CreateAsync(request, ct);
+
+        return NoContent();
+    }
 }

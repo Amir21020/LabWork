@@ -10,6 +10,13 @@ public sealed class ProjectService(
     IBaseRepository<ProjectEntity> projectRepository,
     ILogger<ProjectService> logger) : IProjectService
 {
+    public async Task CreateAsync(CreateProjectRequest request, CancellationToken ct = default)
+    {
+        logger.LogInformation("Creating project with Name={Name}, Code={Code}", request.Name, request.Code);
+
+        var project = ProjectEntity.Create(request.Name, request.Code, request.IsActive);
+        await projectRepository.AddAsync(project, ct);
+    }
     public async Task<IReadOnlyList<GetProjectsResponse>> GetAllAsync(CancellationToken ct = default)
     {
         logger.LogInformation("Fetching all projects");
