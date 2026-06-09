@@ -1,4 +1,11 @@
-﻿using TimeTrackingApp.Api.Exceptions;
+﻿using Microsoft.EntityFrameworkCore;
+using TimeTrackingApp.Api.Exceptions;
+using TimeTrackingApp.BL.Interfaces;
+using TimeTrackingApp.BL.Services;
+using TimeTrackingApp.DAL.Data;
+using TimeTrackingApp.DAL.Entities;
+using TimeTrackingApp.DAL.Interfaces;
+using TimeTrackingApp.DAL.Repositories;
 
 namespace TimeTrackingApp.Api.Extensions;
 
@@ -28,6 +35,20 @@ public static class ServiceExtensions
             });
         });
 
+        return services;
+    }
+
+    public static IServiceCollection AddBusinessLogic(this IServiceCollection services)
+    {
+        services.AddScoped<IProjectService, ProjectService>();
+        return services;
+    }
+
+    public static IServiceCollection AddDataAccess(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(config.GetConnectionString("DefaultConnection")));
+        services.AddScoped<IBaseRepository<ProjectEntity>, BaseRepository<ProjectEntity>>(); 
         return services;
     }
 }

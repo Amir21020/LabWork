@@ -5,11 +5,11 @@ namespace TimeTrackingApp.Api.Middlewares;
 
 public sealed class RequestContextLoggingMiddleware(RequestDelegate next) 
 {
-    private const string CorrelationHeaderName = "X-Corelation-Id";
+    private const string CorrelationHeaderName = "X-Correlation-Id";
 
     public async Task Invoke(HttpContext context)
     {
-        string correlationId = GetCorelationId(context);
+        string correlationId = GetCorrelationId(context);
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {
@@ -17,7 +17,7 @@ public sealed class RequestContextLoggingMiddleware(RequestDelegate next)
         }
     }
 
-    private string GetCorelationId(HttpContext context)
+    private string GetCorrelationId(HttpContext context)
     {
         context.Request.Headers.TryGetValue(
             CorrelationHeaderName, out StringValues correlationId);
