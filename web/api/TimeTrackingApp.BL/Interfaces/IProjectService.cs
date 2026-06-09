@@ -6,4 +6,5 @@ public interface IProjectService
 {
     Task<IReadOnlyList<GetProjectsResponse>> GetAllAsync(CancellationToken ct = default);
     Task CreateAsync(CreateProjectRequest request, CancellationToken ct = default);
+    Task DeleteAsync(Guid id, CancellationToken ct = default);
 }

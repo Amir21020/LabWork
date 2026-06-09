@@ -17,6 +17,24 @@ public sealed class ProjectService(
         var project = ProjectEntity.Create(request.Name, request.Code, request.IsActive);
         await projectRepository.AddAsync(project, ct);
     }
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        logger.LogInformation("Deleting project with Id={Id}", id);
+
+        var project = await projectRepository.GetByIdAsync(id);
+
+        if (project is null)
+        {
+            logger.LogWarning("Project with Id={Id} not found for deletion", id);
+            return;
+        }
+
+        await projectRepository.DeleteAsync(project, ct);
+
+        logger.LogInformation("Project with Id={Id} deleted", id);
+    }
+
     public async Task<IReadOnlyList<GetProjectsResponse>> GetAllAsync(CancellationToken ct = default)
     {
         logger.LogInformation("Fetching all projects");

@@ -17,9 +17,18 @@ public sealed class ProjectController(IProjectService projectService) : BaseCont
 
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<ActionResult> CreateProjectAsync([FromBody] CreateProjectRequest request, CancellationToken ct = default)
+    public async Task<ActionResult> CreateAsync([FromBody] CreateProjectRequest request, CancellationToken ct = default)
     {
         await projectService.CreateAsync(request, ct);
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<ActionResult> DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        await projectService.DeleteAsync(id, ct);
 
         return NoContent();
     }

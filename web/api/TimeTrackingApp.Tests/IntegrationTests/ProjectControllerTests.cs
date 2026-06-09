@@ -101,6 +101,51 @@ public class ProjectControllerTests(CustomWebApplicationFactory factory) : IAsyn
     }
 
     [Fact]
+    public async Task Deleting_existing_project_returns_no_content_and_removes_it_from_database()
+    {
+        var projectId = await CreateProjectAndReturnIdAsync("ToDelete", "DEL", isActive: true);
+
+        var response = await factory.HttpClient.DeleteAsync($"/api/project/{projectId}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var projectInDb = await GetProjectFromDbAsync(projectId);
+        projectInDb.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Deleting_non_existent_project_returns_no_content()
+    {
+        var response = await factory.HttpClient.DeleteAsync($"/api/project/{Guid.NewGuid()}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    private async Task<ProjectEntity?> GetProjectFromDbAsync(Guid id)
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return await dbContext.Projects.FindAsync(id);
+    }
+
+    [Fact]
+    public async Task Deleting_project_removes_it_from_the_list()
+    {
+        await CreateProjectAsync("Keep", "KEP", isActive: true);
+        var projectId = await CreateProjectAndReturnIdAsync("Remove", "REM", isActive: true);
+
+        var deleteResponse = await factory.HttpClient.DeleteAsync($"/api/project/{projectId}");
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var getResponse = await factory.HttpClient.GetAsync("/api/project");
+        var projects = await getResponse.Content.ReadFromJsonAsync<IReadOnlyList<GetProjectsResponse>>();
+
+        projects.Should().HaveCount(1);
+        projects.Should().ContainSingle(p => p.Name == "Keep");
+        projects.Should().NotContain(p => p.Name == "Remove");
+    }
+
+    [Fact]
     public async Task Creating_project_succeeds_when_data_is_valid()
     {
         var request = new CreateProjectRequest(
@@ -123,5 +168,18 @@ public class ProjectControllerTests(CustomWebApplicationFactory factory) : IAsyn
 
         await dbContext.AddAsync(project);
         await dbContext.SaveChangesAsync();
+    }
+
+    private async Task<Guid> CreateProjectAndReturnIdAsync(string name, string code, bool isActive)
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var project = ProjectEntity.Create(name, code, isActive);
+
+        await dbContext.AddAsync(project);
+        await dbContext.SaveChangesAsync();
+
+        return project.Id;
     }
 }
