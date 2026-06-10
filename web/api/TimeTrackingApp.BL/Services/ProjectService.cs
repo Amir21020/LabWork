@@ -52,4 +52,24 @@ public sealed class ProjectService(
             ))
             .ToList();
     }
+
+    public async Task UpdateAsync(Guid id, UpdateProjectRequest request, CancellationToken ct = default)
+    {
+        var project = await projectRepository.GetByIdAsync(id);
+        logger.LogInformation("Updating project with ID {Id}", id);
+
+        if (project is null)
+        {
+            logger.LogWarning("Project with ID {Id} not found for update", id);
+            return;
+        }
+
+        project.Name = request.Name;
+        project.Code = request.Code;
+        project.IsActive = request.IsActive;
+
+        await projectRepository.UpdateAsync(project, ct);
+
+        logger.LogInformation("Project with ID {Id} successfully updated", id);
+    }
 }

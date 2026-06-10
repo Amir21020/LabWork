@@ -146,6 +146,62 @@ public class ProjectControllerTests(CustomWebApplicationFactory factory) : IAsyn
     }
 
     [Fact]
+    public async Task Updating_existing_project_returns_no_content()
+    {
+        var projectId = await CreateProjectAndReturnIdAsync("OldName", "OLD", isActive: true);
+
+        var updateRequest = new UpdateProjectRequest("NewName", "NEW", false);
+        var response = await factory.HttpClient.PutAsJsonAsync($"/api/project/{projectId}", updateRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Updating_project_changes_its_data()
+    {
+        var projectId = await CreateProjectAndReturnIdAsync("Original", "ORG", true);
+
+        var updateRequest = new UpdateProjectRequest("Updated", "UPD", false);
+        await factory.HttpClient.PutAsJsonAsync($"/api/project/{projectId}", updateRequest);
+
+        var getResponse = await factory.HttpClient.GetAsync("/api/project");
+        var projects = await getResponse.Content.ReadFromJsonAsync<IReadOnlyList<GetProjectsResponse>>();
+
+        projects.Should().ContainSingle(p =>
+            p.ProjectId == projectId &&
+            p.Name == "Updated" &&
+            p.Code == "UPD" &&
+            p.IsActive == false);
+    }
+
+    [Fact]
+    public async Task Updating_project_with_empty_name_returns_bad_request()
+    {
+        var projectId = await CreateProjectAndReturnIdAsync("Valid", "VAL", isActive: true);
+
+        var updateRequest = new UpdateProjectRequest("", "NEW", true);
+        var response = await factory.HttpClient.PutAsJsonAsync($"/api/project/{projectId}", updateRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var errorResponse = await response.Content.ReadFromJsonAsync<ValidationFailedResponseDto>();
+        errorResponse.Should().NotBeNull();
+        errorResponse!.Status.Should().Be("ValidationFailed");
+        errorResponse.Errors.Should().Contain(e =>
+            e.Field == "Name" &&
+            e.Message == "Название проекта обязательно для заполнения.");
+    }
+
+    [Fact]
+    public async Task Updating_non_existent_project_returns_no_content()
+    {
+        var updateRequest = new UpdateProjectRequest("Ghost", "GHT", true);
+        var response = await factory.HttpClient.PutAsJsonAsync($"/api/project/{Guid.NewGuid()}", updateRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
     public async Task Creating_project_succeeds_when_data_is_valid()
     {
         var request = new CreateProjectRequest(

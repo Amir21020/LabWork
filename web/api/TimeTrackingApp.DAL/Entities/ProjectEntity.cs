@@ -2,9 +2,9 @@
 
 public sealed class ProjectEntity : BaseEntity
 {
-    public string Name { get; private set; } 
-    public string Code { get; private set; } 
-    public bool IsActive { get; private set; }
+    public string Name { get; set; } 
+    public string Code { get; set; } 
+    public bool IsActive { get; set; }
 
     private ProjectEntity()
     {
