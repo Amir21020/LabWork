@@ -46,6 +46,7 @@ public static class ServiceExtensions
     {
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<ITaskService, TaskService>();
+        services.AddScoped<ITimeEntryService, TimeEntryService>();
         services.AddValidatorsFromAssembly(typeof(CreateProjectRequestValidator).Assembly);
 
         return services;
@@ -56,6 +57,7 @@ public static class ServiceExtensions
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(config.GetConnectionString("DefaultConnection")));
         services.AddScoped<IProjectRepository, ProjectRepository>();
+        services.AddScoped<ITimeEntryRepository, TimeEntryRepository>();
         services.AddScoped<ITaskRepository, TaskRepository>();
         return services;
     }

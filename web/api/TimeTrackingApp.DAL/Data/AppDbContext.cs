@@ -7,4 +7,5 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 {
     public DbSet<ProjectEntity> Projects { get; set; }
     public DbSet<ProjectTaskEntity> ProjectTasks { get; set; }
+    public DbSet<TimeEntryEntity> TimeEntries { get; set; }
 }

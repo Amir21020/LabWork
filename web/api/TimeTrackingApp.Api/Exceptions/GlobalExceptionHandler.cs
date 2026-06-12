@@ -20,6 +20,14 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                 (StatusCodes.Status400BadRequest, "Bad Request",
                     new { Message = exception.Message }),
 
+            KeyNotFoundException =>
+                (StatusCodes.Status404NotFound, "Not Found",
+                    new { Message = exception.Message }),
+
+            InvalidOperationException =>
+                (StatusCodes.Status400BadRequest, "Invalid Operation",
+                    new { Message = exception.Message }),
+
             DbException =>
                 (StatusCodes.Status503ServiceUnavailable, "Database Error",
                     new { Message = "A database error occurred while processing your request." }),
