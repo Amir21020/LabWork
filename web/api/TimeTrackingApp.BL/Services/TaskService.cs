@@ -35,4 +35,21 @@ public sealed class TaskService(ILogger<TaskService> logger, IProjectRepository 
             .Select(t => new GetTasksResponse(t.Id, t.Name, t.Project.Id, t.Project.Name, t.IsActive))
             .ToList();
     }
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        logger.LogInformation("Deleting task with Id={Id}", id);
+
+        var task = await taskRepository.GetByIdAsync(id, ct);
+
+        if (task is null)
+        {
+            logger.LogWarning("Task with Id={Id} not found for deletion", id);
+            return;
+        }
+
+        await taskRepository.DeleteAsync(task, ct);
+
+        logger.LogInformation("Task with Id={Id} deleted", id);
+    }
 }

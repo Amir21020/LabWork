@@ -1,10 +1,14 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 using TimeTrackingApp.BL.DTOs;
+using TimeTrackingApp.BL.Services;
 using TimeTrackingApp.DAL.Data;
 using TimeTrackingApp.DAL.Entities;
+using TimeTrackingApp.DAL.Repositories;
 using TimeTrackingApp.Tests.Models;
 
 namespace TimeTrackingApp.Tests.IntegrationTests;
@@ -107,5 +111,40 @@ public sealed class TaskControllerTests(CustomWebApplicationFactory factory) : I
         await dbContext.SaveChangesAsync();
 
         return task.Id;
+    }
+
+    [Fact]
+    public async Task Deleting_existing_task_returns_no_content()
+    {
+        var taskId = await CreateTaskAsync("ToDelete", true);
+
+        var response = await factory.HttpClient.DeleteAsync($"/api/task/{taskId}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Deleting_non_existent_task_returns_no_content()
+    {
+        var response = await factory.HttpClient.DeleteAsync($"/api/task/{Guid.NewGuid()}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Deleting_task_removes_it_from_the_list()
+    {
+        await CreateTaskAsync("Keep", true);
+        var taskId = await CreateTaskAsync("Remove", true);
+
+        var deleteResponse = await factory.HttpClient.DeleteAsync($"/api/task/{taskId}");
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var getResponse = await factory.HttpClient.GetAsync("/api/task");
+        var tasks = await getResponse.Content.ReadFromJsonAsync<IReadOnlyList<GetTasksResponse>>();
+
+        tasks.Should().HaveCount(1);
+        tasks.Should().ContainSingle(t => t.Name == "Keep");
+        tasks.Should().NotContain(t => t.Name == "Remove");
     }
 }
