@@ -147,4 +147,58 @@ public sealed class TaskControllerTests(CustomWebApplicationFactory factory) : I
         tasks.Should().ContainSingle(t => t.Name == "Keep");
         tasks.Should().NotContain(t => t.Name == "Remove");
     }
+
+    [Fact]
+    public async Task Updating_existing_task_returns_no_content()
+    {
+        var taskId = await CreateTaskAsync("OldName", true);
+
+        var updateRequest = new UpdateTaskRequest("NewName", false);
+        var response = await factory.HttpClient.PutAsJsonAsync($"/api/task/{taskId}", updateRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Updating_task_changes_its_data()
+    {
+        var taskId = await CreateTaskAsync("Original", true);
+
+        var updateRequest = new UpdateTaskRequest("Updated", false);
+        await factory.HttpClient.PutAsJsonAsync($"/api/task/{taskId}", updateRequest);
+
+        var getResponse = await factory.HttpClient.GetAsync("/api/task");
+        var tasks = await getResponse.Content.ReadFromJsonAsync<IReadOnlyList<GetTasksResponse>>();
+
+        tasks.Should().ContainSingle(t =>
+            t.Id == taskId &&
+            t.Name == "Updated" &&
+            t.IsActive == false);
+    }
+
+    [Fact]
+    public async Task Updating_task_with_empty_name_returns_bad_request()
+    {
+        var taskId = await CreateTaskAsync("Valid", true);
+
+        var updateRequest = new UpdateTaskRequest("", true);
+        var response = await factory.HttpClient.PutAsJsonAsync($"/api/task/{taskId}", updateRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var errorResponse = await response.Content.ReadFromJsonAsync<ValidationFailedResponseDto>();
+        errorResponse.Should().NotBeNull();
+        errorResponse!.Status.Should().Be("ValidationFailed");
+        errorResponse.Errors.Should().Contain(e =>
+            e.Field == "Name" && e.Message == "Название задачи обязательно для заполнения.");
+    }
+
+    [Fact]
+    public async Task Updating_non_existent_task_returns_no_content()
+    {
+        var updateRequest = new UpdateTaskRequest("Ghost", true);
+        var response = await factory.HttpClient.PutAsJsonAsync($"/api/task/{Guid.NewGuid()}", updateRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
 }

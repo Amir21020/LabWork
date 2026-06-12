@@ -52,4 +52,25 @@ public sealed class TaskService(ILogger<TaskService> logger, IProjectRepository 
 
         logger.LogInformation("Task with Id={Id} deleted", id);
     }
+
+    public async Task UpdateAsync(Guid id, UpdateTaskRequest request, CancellationToken ct = default)
+    {
+        logger.LogInformation("Updating task with Id={Id}", id);
+
+        var task = await taskRepository.GetByIdAsync(id, ct);
+
+        if (task is null)
+        {
+            logger.LogWarning("Task with Id={Id} not found for update", id);
+            return;
+        }
+
+        task.Name = request.Name;
+        task.IsActive = request.IsActive;
+
+        await taskRepository.UpdateAsync(task, ct);
+
+        logger.LogInformation("Task with Id={Id} updated", id);
+    }
+
 }

@@ -29,4 +29,13 @@ public sealed class TaskController(ITaskService taskService) : BaseController
         await taskService.DeleteAsync(id, ct);
         return NoContent();
     }
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<ActionResult> UpdateAsync(Guid id, [FromBody] UpdateTaskRequest request, CancellationToken ct = default)
+    {
+        await taskService.UpdateAsync(id, request, ct);
+
+        return NoContent();
+    }
 }
