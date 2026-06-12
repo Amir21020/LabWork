@@ -6,4 +6,5 @@ namespace TimeTrackingApp.DAL.Data;
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<ProjectEntity> Projects { get; set; }
+    public DbSet<ProjectTaskEntity> ProjectTasks { get; set; }
 }

@@ -168,7 +168,7 @@ public class ProjectControllerTests(CustomWebApplicationFactory factory) : IAsyn
         var projects = await getResponse.Content.ReadFromJsonAsync<IReadOnlyList<GetProjectsResponse>>();
 
         projects.Should().ContainSingle(p =>
-            p.ProjectId == projectId &&
+            p.Id == projectId &&
             p.Name == "Updated" &&
             p.Code == "UPD" &&
             p.IsActive == false);

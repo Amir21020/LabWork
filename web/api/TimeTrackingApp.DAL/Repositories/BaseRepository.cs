@@ -7,7 +7,7 @@ namespace TimeTrackingApp.DAL.Repositories;
 
 public class BaseRepository<TEntity>(AppDbContext context) : IBaseRepository<TEntity> where TEntity : BaseEntity
 {
-    private readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
+    protected readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
 
     public async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken ct = default)
         => await _dbSet.AsNoTracking().ToListAsync(ct);
