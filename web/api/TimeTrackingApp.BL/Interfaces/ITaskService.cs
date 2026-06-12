@@ -5,4 +5,5 @@ namespace TimeTrackingApp.BL.Interfaces;
 public interface ITaskService
 {
     Task<IReadOnlyList<GetTasksResponse>> GetAllAsync(CancellationToken ct = default);
+    Task CreateAsync(CreateTaskRequest request, CancellationToken ct = default);
 }

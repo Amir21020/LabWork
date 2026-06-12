@@ -6,7 +6,6 @@ using TimeTrackingApp.BL.Interfaces;
 using TimeTrackingApp.BL.Services;
 using TimeTrackingApp.BL.Validators;
 using TimeTrackingApp.DAL.Data;
-using TimeTrackingApp.DAL.Entities;
 using TimeTrackingApp.DAL.Interfaces;
 using TimeTrackingApp.DAL.Repositories;
 
@@ -56,7 +55,7 @@ public static class ServiceExtensions
     {
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(config.GetConnectionString("DefaultConnection")));
-        services.AddScoped<IBaseRepository<ProjectEntity>, BaseRepository<ProjectEntity>>();
+        services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<ITaskRepository, TaskRepository>();
         return services;
     }

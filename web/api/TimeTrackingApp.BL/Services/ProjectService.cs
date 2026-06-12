@@ -7,7 +7,7 @@ using TimeTrackingApp.DAL.Interfaces;
 namespace TimeTrackingApp.BL.Services;
 
 public sealed class ProjectService(
-    IBaseRepository<ProjectEntity> projectRepository,
+    IProjectRepository projectRepository,
     ILogger<ProjectService> logger) : IProjectService
 {
     public async Task CreateAsync(CreateProjectRequest request, CancellationToken ct = default)
@@ -22,7 +22,7 @@ public sealed class ProjectService(
     {
         logger.LogInformation("Deleting project with Id={Id}", id);
 
-        var project = await projectRepository.GetByIdAsync(id);
+        var project = await projectRepository.GetByIdAsync(id, ct);
 
         if (project is null)
         {
@@ -55,8 +55,9 @@ public sealed class ProjectService(
 
     public async Task UpdateAsync(Guid id, UpdateProjectRequest request, CancellationToken ct = default)
     {
-        var project = await projectRepository.GetByIdAsync(id);
-        logger.LogInformation("Updating project with ID {Id}", id);
+        logger.LogInformation("Updating project with Id={Id}", id);
+
+        var project = await projectRepository.GetByIdAsync(id, ct);
 
         if (project is null)
         {

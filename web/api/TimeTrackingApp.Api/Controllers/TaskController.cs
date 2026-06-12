@@ -13,4 +13,12 @@ public sealed class TaskController(ITaskService taskService) : BaseController
         var tasks = await taskService.GetAllAsync(ct);
         return Ok(tasks);
     }
+
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> CreateAsync(CreateTaskRequest request, CancellationToken ct = default)
+    {
+        await taskService.CreateAsync(request, ct);
+        return NoContent(); 
+    }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TimeTrackingApp.DAL.Data;
 using TimeTrackingApp.DAL.Entities;
+using TimeTrackingApp.DAL.Interfaces;
 
 namespace TimeTrackingApp.DAL.Repositories;
 
