@@ -172,6 +172,50 @@ public sealed class TimeEntryControllerTests(CustomWebApplicationFactory factory
 
         putResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task Deleting_existing_time_entry_returns_no_content()
+    {
+        var taskId = await CreateActiveTaskAsync();
+        var date = DateOnly.FromDateTime(DateTime.Today);
+        await factory.HttpClient.PostAsJsonAsync("/api/timeentry", new CreateTimeEntryRequest(date, 3, "ToDelete", taskId));
+
+        var getResponse = await factory.HttpClient.GetAsync("/api/timeentry");
+        var all = await getResponse.Content.ReadFromJsonAsync<IReadOnlyList<TimeEntryResponse>>();
+        var entryId = all!.First().Id;
+
+        var deleteResponse = await factory.HttpClient.DeleteAsync($"/api/timeentry/{entryId}");
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Deleting_non_existent_time_entry_returns_no_content()
+    {
+        var response = await factory.HttpClient.DeleteAsync($"/api/timeentry/{Guid.NewGuid()}");
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Deleting_time_entry_removes_it_from_the_list()
+    {
+        var taskId = await CreateActiveTaskAsync();
+        var date = DateOnly.FromDateTime(DateTime.Today);
+        await factory.HttpClient.PostAsJsonAsync("/api/timeentry", new CreateTimeEntryRequest(date, 3, "Keep", taskId));
+        await factory.HttpClient.PostAsJsonAsync("/api/timeentry", new CreateTimeEntryRequest(date, 2, "Remove", taskId));
+
+        var getResponse = await factory.HttpClient.GetAsync("/api/timeentry");
+        var all = await getResponse.Content.ReadFromJsonAsync<IReadOnlyList<TimeEntryResponse>>();
+        var removeId = all!.First(e => e.Description == "Remove").Id;
+
+        await factory.HttpClient.DeleteAsync($"/api/timeentry/{removeId}");
+
+        var finalResponse = await factory.HttpClient.GetAsync("/api/timeentry");
+        var final = await finalResponse.Content.ReadFromJsonAsync<IReadOnlyList<TimeEntryResponse>>();
+        final.Should().HaveCount(1);
+        final.Should().Contain(e => e.Description == "Keep");
+        final.Should().NotContain(e => e.Description == "Remove");
+    }
+
     private async Task<Guid> CreateActiveTaskAsync()
     {
         var projectId = await CreateProjectAsync();

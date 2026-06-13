@@ -29,4 +29,12 @@ public sealed class TimeEntryController(ITimeEntryService timeEntryService) : Ba
         await timeEntryService.UpdateAsync(id, request, ct);
         return NoContent();
     }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<ActionResult> DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        await timeEntryService.DeleteAsync(id, ct);
+        return NoContent();
+    }
 }

@@ -140,4 +140,20 @@ public sealed class TimeEntryService(
             t.Hours,
             t.Description)).ToList();
     }
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        logger.LogInformation("Deleting time entry with Id={Id}", id);
+
+        var timeEntry = await timeEntryRepository.GetByIdAsync(id, ct);
+        if (timeEntry is null)
+        {
+            logger.LogWarning("Time entry with Id={Id} not found for deletion", id);
+            return;
+        }
+
+        await timeEntryRepository.DeleteAsync(timeEntry, ct);
+
+        logger.LogInformation("Time entry with Id={Id} deleted", id);
+    }
 }

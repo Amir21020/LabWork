@@ -484,4 +484,46 @@ public sealed class TimeEntryServiceTests
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task Delete_succeeds_when_entry_exists()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var entryId = Guid.NewGuid();
+        var existingEntry = TimeEntryEntity.Create(DateOnly.FromDateTime(DateTime.Today), Guid.NewGuid(), 4, "");
+        existingEntry.Id = entryId;
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByIdAsync(entryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingEntry);
+
+        await sut.DeleteAsync(entryId);
+
+        timeEntryRepoMock.Verify(
+            r => r.DeleteAsync(existingEntry, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Delete_does_nothing_when_entry_not_found()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var entryId = Guid.NewGuid();
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByIdAsync(entryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TimeEntryEntity?)null);
+
+        await sut.DeleteAsync(entryId);
+
+        timeEntryRepoMock.Verify(
+            r => r.DeleteAsync(It.IsAny<TimeEntryEntity>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }
