@@ -16,7 +16,7 @@ public sealed class TaskController(ITaskService taskService) : BaseController
 
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> CreateAsync(CreateTaskRequest request, CancellationToken ct = default)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateTaskRequest request, CancellationToken ct = default)
     {
         await taskService.CreateAsync(request, ct);
         return NoContent(); 
