@@ -49,4 +49,28 @@ public sealed class TimeEntryService(
             "Time entry created: Id={Id}, TaskId={TaskId}, Date={Date}, Hours={Hours}",
             timeEntry.Id, request.TaskId, request.Date, request.Hours);
     }
+
+    public async Task<IReadOnlyList<TimeEntryResponse>> GetListAsync(GetTimeEntriesRequest request, CancellationToken ct = default)
+    {
+        IReadOnlyList<TimeEntryEntity> entities;
+
+        if (request.Date.HasValue)
+        {
+            entities = await timeEntryRepository.GetByDateAsync(request.Date.Value, ct);
+        }
+        else if (request.Month.HasValue && request.Year.HasValue)
+        {
+            entities = await timeEntryRepository.GetByMonthAsync(request.Month.Value, request.Year.Value, ct);
+        }
+        else
+        {
+            entities = await timeEntryRepository.GetAllAsync(ct);
+        }
+
+        return entities.Select(t => new TimeEntryResponse(
+            t.Id,
+            t.Date,
+            t.Hours,
+            t.Description)).ToList();
+    }
 }

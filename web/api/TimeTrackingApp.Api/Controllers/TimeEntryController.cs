@@ -8,9 +8,17 @@ public sealed class TimeEntryController(ITimeEntryService timeEntryService) : Ba
 {
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> CreateAsync(CreateTimeEntryRequest request, CancellationToken ct = default)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateTimeEntryRequest request, CancellationToken ct = default)
     {
         await timeEntryService.CreateAsync(request, ct);
         return NoContent();
+    }
+
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<TimeEntryResponse>>> GetListAsync([FromQuery] GetTimeEntriesRequest request, CancellationToken ct = default)
+    {
+        var result = await timeEntryService.GetListAsync(request, ct);
+        return Ok(result);
     }
 }

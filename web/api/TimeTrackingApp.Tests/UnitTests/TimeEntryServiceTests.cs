@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Logging.Abstractions;
+﻿using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using TimeTrackingApp.Api.Controllers;
 using TimeTrackingApp.BL.DTOs;
 using TimeTrackingApp.BL.Services;
 using TimeTrackingApp.DAL.Entities;
@@ -130,4 +132,100 @@ public sealed class TimeEntryServiceTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task Entries_are_retrieved_for_specific_date()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var date = DateOnly.Parse("2026-06-01");
+        var request = new GetTimeEntriesRequest(Date: date, Month: null, Year: null);
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByDateAsync(date, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TimeEntryEntity>
+            {
+                TimeEntryEntity.Create(date, Guid.NewGuid(), 4, "Filtered by date")
+            });
+
+        var result = await sut.GetListAsync(request);
+
+        result.Should().HaveCount(1);
+        result[0].Date.Should().Be(date);
+        result[0].Hours.Should().Be(4);
+        timeEntryRepoMock.Verify(r => r.GetByDateAsync(date, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Entries_are_retrieved_for_entire_month()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var request = new GetTimeEntriesRequest(Date: null, Month: 6, Year: 2026);
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByMonthAsync(6, 2026, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TimeEntryEntity>
+            {
+                TimeEntryEntity.Create(DateOnly.Parse("2026-06-05"), Guid.NewGuid(), 2, "June entry")
+            });
+
+        var result = await sut.GetListAsync(request);
+
+        result.Should().HaveCount(1);
+        result[0].Hours.Should().Be(2);
+        timeEntryRepoMock.Verify(r => r.GetByMonthAsync(6, 2026, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task All_entries_are_returned_when_year_is_missing_from_request()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var request = new GetTimeEntriesRequest(Date: null, Month: 6, Year: null);
+
+        timeEntryRepoMock
+            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TimeEntryEntity>
+            {
+                TimeEntryEntity.Create(DateOnly.Parse("2026-06-01"), Guid.NewGuid(), 3, "Fallback")
+            });
+
+        var result = await sut.GetListAsync(request);
+
+        result.Should().HaveCount(1);
+        timeEntryRepoMock.Verify(r => r.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
+        timeEntryRepoMock.Verify(r => r.GetByMonthAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Retrieved_entries_are_mapped_to_response_dto()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var date = DateOnly.Parse("2026-06-10");
+        var taskId = Guid.NewGuid();
+        var entry = TimeEntryEntity.Create(date, taskId, 7, "Mapping test");
+        entry.Id = Guid.NewGuid();
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByDateAsync(date, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TimeEntryEntity> { entry });
+
+        var request = new GetTimeEntriesRequest(Date: date, Month: null, Year: null);
+        var result = await sut.GetListAsync(request);
+
+        var response = result.Should().ContainSingle().Subject;
+        response.Id.Should().Be(entry.Id);
+        response.Date.Should().Be(date);
+        response.Hours.Should().Be(7);
+        response.Description.Should().Be("Mapping test");
+    }
 }
