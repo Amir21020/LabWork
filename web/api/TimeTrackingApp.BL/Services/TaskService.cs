@@ -20,7 +20,7 @@ public sealed class TaskService(ILogger<TaskService> logger, IProjectRepository 
         }
 
         var task = ProjectTaskEntity.Create(request.Name, request.ProjectId, request.IsActive);
-        await taskRepository.AddAsync(task);
+        await taskRepository.AddAsync(task, ct);
 
         logger.LogInformation("Task with Id={Id} created", task.Id);
     }
