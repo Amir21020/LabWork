@@ -50,6 +50,73 @@ public sealed class TimeEntryService(
             timeEntry.Id, request.TaskId, request.Date, request.Hours);
     }
 
+    public async Task UpdateAsync(Guid id, UpdateTimeEntryRequest request, CancellationToken ct = default)
+    {
+        logger.LogInformation(
+            "Updating time entry: Id={Id}, TaskId={TaskId}, Date={Date}, Hours={Hours}",
+            id, request.TaskId, request.Date, request.Hours);
+
+        var timeEntry = await timeEntryRepository.GetByIdAsync(id, ct);
+        if (timeEntry is null)
+        {
+            logger.LogWarning("Time entry with Id={Id} not found for update", id);
+            throw new KeyNotFoundException($"Проводка с Id {id} не найдена.");
+        }
+
+        var currentTask = await taskRepository.GetByIdAsync(timeEntry.TaskId, ct);
+        if (currentTask is null)
+        {
+            logger.LogWarning("Task with Id={TaskId} not found for time entry update", timeEntry.TaskId);
+            throw new KeyNotFoundException($"Задача с Id {timeEntry.TaskId} не найдена.");
+        }
+
+        if (!currentTask.IsActive && timeEntry.TaskId != request.TaskId)
+        {
+            logger.LogWarning(
+                "Cannot change task for time entry Id={Id}: current task (Id={TaskId}) is inactive",
+                id, timeEntry.TaskId);
+            throw new InvalidOperationException("Нельзя изменить задачу для проводки, так как текущая задача неактивна.");
+        }
+
+        if (timeEntry.TaskId != request.TaskId)
+        {
+            var newTask = await taskRepository.GetByIdAsync(request.TaskId, ct);
+            if (newTask is null)
+            {
+                logger.LogWarning("New task with Id={TaskId} not found for time entry update", request.TaskId);
+                throw new KeyNotFoundException($"Задача с Id {request.TaskId} не найдена.");
+            }
+
+            if (!newTask.IsActive)
+            {
+                logger.LogWarning("New task with Id={TaskId} is not active, cannot assign to time entry", request.TaskId);
+                throw new InvalidOperationException("Нельзя назначить проводку на неактивную задачу.");
+            }
+        }
+
+        var totalHoursByDay = await timeEntryRepository.GetDailyTotalHoursAsync(request.Date, ct);
+        totalHoursByDay -= timeEntry.Hours;
+
+        if (totalHoursByDay + request.Hours > 24)
+        {
+            logger.LogWarning(
+                "Daily limit exceeded on update: Date={Date}, existing={ExistingHours}, requested={RequestedHours}",
+                request.Date, totalHoursByDay, request.Hours);
+            throw new InvalidOperationException($"Невозможно обновить проводку: превышен суточный лимит времени (уже списано: {totalHoursByDay} ч.).");
+        }
+
+        timeEntry.Date = request.Date;
+        timeEntry.Hours = request.Hours;
+        timeEntry.Description = request.Description;
+        timeEntry.TaskId = request.TaskId;
+
+        await timeEntryRepository.UpdateAsync(timeEntry, ct);
+
+        logger.LogInformation(
+            "Time entry updated: Id={Id}, TaskId={TaskId}, Date={Date}, Hours={Hours}",
+            id, request.TaskId, request.Date, request.Hours);
+    }
+
     public async Task<IReadOnlyList<TimeEntryResponse>> GetListAsync(GetTimeEntriesRequest request, CancellationToken ct = default)
     {
         IReadOnlyList<TimeEntryEntity> entities;

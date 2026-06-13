@@ -111,6 +111,67 @@ public sealed class TimeEntryControllerTests(CustomWebApplicationFactory factory
         entries[0].Description.Should().Be("January");
     }
 
+    [Fact]
+    public async Task Updating_time_entry_succeeds_and_persists_data()
+    {
+        var taskId = await CreateActiveTaskAsync();
+        var date = DateOnly.FromDateTime(DateTime.Today);
+        await factory.HttpClient.PostAsJsonAsync("/api/timeentry", new CreateTimeEntryRequest(date, 3, "Original", taskId));
+
+        var getResponse = await factory.HttpClient.GetAsync("/api/timeentry");
+        var all = await getResponse.Content.ReadFromJsonAsync<IReadOnlyList<TimeEntryResponse>>();
+        var entryId = all!.First().Id;
+
+        var updateRequest = new UpdateTimeEntryRequest(date, 5, "Updated", taskId);
+        var putResponse = await factory.HttpClient.PutAsJsonAsync($"/api/timeentry/{entryId}", updateRequest);
+
+        putResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var entry = await dbContext.TimeEntries.FindAsync(entryId);
+        entry.Should().NotBeNull();
+        entry!.Hours.Should().Be(5);
+        entry.Description.Should().Be("Updated");
+    }
+
+    [Fact]
+    public async Task Updating_time_entry_fails_when_entry_not_found()
+    {
+        var taskId = await CreateActiveTaskAsync();
+        var request = new UpdateTimeEntryRequest(DateOnly.FromDateTime(DateTime.Today), 3, "Test", taskId);
+        var response = await factory.HttpClient.PutAsJsonAsync($"/api/timeentry/{Guid.NewGuid()}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Updating_time_entry_fails_when_task_is_inactive_and_task_changes()
+    {
+        var projectId = await CreateProjectAsync();
+        var taskId = await CreateTaskAsync(projectId, "WillBeInactive", true);
+        var otherTaskId = await CreateTaskAsync(projectId, "Other", true);
+
+        var date = DateOnly.FromDateTime(DateTime.Today);
+        await factory.HttpClient.PostAsJsonAsync("/api/timeentry", new CreateTimeEntryRequest(date, 3, "Test", taskId));
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var task = await dbContext.ProjectTasks.FindAsync(taskId);
+            task!.IsActive = false;
+            await dbContext.SaveChangesAsync();
+        }
+
+        var getResponse = await factory.HttpClient.GetAsync("/api/timeentry");
+        var all = await getResponse.Content.ReadFromJsonAsync<IReadOnlyList<TimeEntryResponse>>();
+        var entryId = all!.First().Id;
+
+        var updateRequest = new UpdateTimeEntryRequest(date, 3, "Try change task", otherTaskId);
+        var putResponse = await factory.HttpClient.PutAsJsonAsync($"/api/timeentry/{entryId}", updateRequest);
+
+        putResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
     private async Task<Guid> CreateActiveTaskAsync()
     {
         var projectId = await CreateProjectAsync();

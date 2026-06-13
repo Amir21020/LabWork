@@ -21,4 +21,12 @@ public sealed class TimeEntryController(ITimeEntryService timeEntryService) : Ba
         var result = await timeEntryService.GetListAsync(request, ct);
         return Ok(result);
     }
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<ActionResult> UpdateAsync(Guid id, [FromBody] UpdateTimeEntryRequest request, CancellationToken ct = default)
+    {
+        await timeEntryService.UpdateAsync(id, request, ct);
+        return NoContent();
+    }
 }

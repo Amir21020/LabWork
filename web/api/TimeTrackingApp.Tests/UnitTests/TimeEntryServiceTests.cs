@@ -228,4 +228,260 @@ public sealed class TimeEntryServiceTests
         response.Hours.Should().Be(7);
         response.Description.Should().Be("Mapping test");
     }
+
+    [Fact]
+    public async Task Update_fails_when_time_entry_not_found()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var id = Guid.NewGuid();
+        var request = new UpdateTimeEntryRequest(DateOnly.FromDateTime(DateTime.Today), 4, "", Guid.NewGuid());
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByIdAsync(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TimeEntryEntity?)null);
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            sut.UpdateAsync(id, request));
+
+        timeEntryRepoMock.Verify(
+            r => r.UpdateAsync(It.IsAny<TimeEntryEntity>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Update_fails_when_current_task_is_inactive_and_task_id_changes()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var entryId = Guid.NewGuid();
+        var oldTaskId = Guid.NewGuid();
+        var newTaskId = Guid.NewGuid();
+        var request = new UpdateTimeEntryRequest(DateOnly.FromDateTime(DateTime.Today), 4, "", newTaskId);
+
+        var existingEntry = TimeEntryEntity.Create(DateOnly.FromDateTime(DateTime.Today), oldTaskId, 4, "");
+        existingEntry.Id = entryId;
+
+        var inactiveTask = ProjectTaskEntity.Create("Old Task", Guid.NewGuid(), false);
+        inactiveTask.Id = oldTaskId;
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByIdAsync(entryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingEntry);
+
+        taskRepoMock
+            .Setup(r => r.GetByIdAsync(oldTaskId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(inactiveTask);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.UpdateAsync(entryId, request));
+
+        timeEntryRepoMock.Verify(
+            r => r.UpdateAsync(It.IsAny<TimeEntryEntity>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Update_succeeds_when_current_task_inactive_but_task_id_unchanged()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var entryId = Guid.NewGuid();
+        var taskId = Guid.NewGuid();
+        var request = new UpdateTimeEntryRequest(DateOnly.FromDateTime(DateTime.Today), 5, "Updated", taskId);
+
+        var existingEntry = TimeEntryEntity.Create(DateOnly.FromDateTime(DateTime.Today), taskId, 3, "Old");
+        existingEntry.Id = entryId;
+
+        var inactiveTask = ProjectTaskEntity.Create("Task", Guid.NewGuid(), false);
+        inactiveTask.Id = taskId;
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByIdAsync(entryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingEntry);
+
+        taskRepoMock
+            .Setup(r => r.GetByIdAsync(taskId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(inactiveTask);
+
+        timeEntryRepoMock
+            .Setup(r => r.GetDailyTotalHoursAsync(request.Date, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(10);
+
+        await sut.UpdateAsync(entryId, request);
+
+        timeEntryRepoMock.Verify(
+            r => r.UpdateAsync(It.Is<TimeEntryEntity>(e =>
+                e.Id == entryId &&
+                e.Hours == 5 &&
+                e.Description == "Updated" &&
+                e.TaskId == taskId),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Update_fails_when_new_task_does_not_exist()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var entryId = Guid.NewGuid();
+        var oldTaskId = Guid.NewGuid();
+        var newTaskId = Guid.NewGuid();
+        var request = new UpdateTimeEntryRequest(DateOnly.FromDateTime(DateTime.Today), 4, "", newTaskId);
+
+        var existingEntry = TimeEntryEntity.Create(DateOnly.FromDateTime(DateTime.Today), oldTaskId, 4, "");
+        existingEntry.Id = entryId;
+
+        var activeTask = ProjectTaskEntity.Create("Old Task", Guid.NewGuid(), true);
+        activeTask.Id = oldTaskId;
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByIdAsync(entryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingEntry);
+
+        taskRepoMock
+            .Setup(r => r.GetByIdAsync(oldTaskId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeTask);
+
+        taskRepoMock
+            .Setup(r => r.GetByIdAsync(newTaskId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ProjectTaskEntity?)null);
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            sut.UpdateAsync(entryId, request));
+
+        timeEntryRepoMock.Verify(
+            r => r.UpdateAsync(It.IsAny<TimeEntryEntity>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Update_fails_when_new_task_is_inactive()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var entryId = Guid.NewGuid();
+        var oldTaskId = Guid.NewGuid();
+        var newTaskId = Guid.NewGuid();
+        var request = new UpdateTimeEntryRequest(DateOnly.FromDateTime(DateTime.Today), 4, "", newTaskId);
+
+        var existingEntry = TimeEntryEntity.Create(DateOnly.FromDateTime(DateTime.Today), oldTaskId, 4, "");
+        existingEntry.Id = entryId;
+
+        var activeTask = ProjectTaskEntity.Create("Old Task", Guid.NewGuid(), true);
+        activeTask.Id = oldTaskId;
+
+        var inactiveTask = ProjectTaskEntity.Create("New Task", Guid.NewGuid(), false);
+        inactiveTask.Id = newTaskId;
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByIdAsync(entryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingEntry);
+
+        taskRepoMock
+            .Setup(r => r.GetByIdAsync(oldTaskId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeTask);
+
+        taskRepoMock
+            .Setup(r => r.GetByIdAsync(newTaskId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(inactiveTask);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.UpdateAsync(entryId, request));
+
+        timeEntryRepoMock.Verify(
+            r => r.UpdateAsync(It.IsAny<TimeEntryEntity>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Update_fails_when_daily_limit_exceeded()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var entryId = Guid.NewGuid();
+        var taskId = Guid.NewGuid();
+        var request = new UpdateTimeEntryRequest(DateOnly.FromDateTime(DateTime.Today), 10, "", taskId);
+
+        var existingEntry = TimeEntryEntity.Create(DateOnly.FromDateTime(DateTime.Today), taskId, 3, "");
+        existingEntry.Id = entryId;
+
+        var activeTask = ProjectTaskEntity.Create("Task", Guid.NewGuid(), true);
+        activeTask.Id = taskId;
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByIdAsync(entryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingEntry);
+
+        taskRepoMock
+            .Setup(r => r.GetByIdAsync(taskId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeTask);
+
+        timeEntryRepoMock
+            .Setup(r => r.GetDailyTotalHoursAsync(request.Date, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(20);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sut.UpdateAsync(entryId, request));
+
+        timeEntryRepoMock.Verify(
+            r => r.UpdateAsync(It.IsAny<TimeEntryEntity>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Update_succeeds_and_updates_fields()
+    {
+        var taskRepoMock = new Mock<ITaskRepository>();
+        var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
+        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+
+        var entryId = Guid.NewGuid();
+        var taskId = Guid.NewGuid();
+        var newDate = DateOnly.FromDateTime(DateTime.Today);
+        var request = new UpdateTimeEntryRequest(newDate, 6, "Updated description", taskId);
+
+        var existingEntry = TimeEntryEntity.Create(DateOnly.FromDateTime(DateTime.Today.AddDays(-1)), taskId, 2, "Old");
+        existingEntry.Id = entryId;
+
+        var activeTask = ProjectTaskEntity.Create("Task", Guid.NewGuid(), true);
+        activeTask.Id = taskId;
+
+        timeEntryRepoMock
+            .Setup(r => r.GetByIdAsync(entryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingEntry);
+
+        taskRepoMock
+            .Setup(r => r.GetByIdAsync(taskId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeTask);
+
+        timeEntryRepoMock
+            .Setup(r => r.GetDailyTotalHoursAsync(newDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(5);
+
+        await sut.UpdateAsync(entryId, request);
+
+        timeEntryRepoMock.Verify(
+            r => r.UpdateAsync(It.Is<TimeEntryEntity>(e =>
+                e.Id == entryId &&
+                e.Date == newDate &&
+                e.Hours == 6 &&
+                e.Description == "Updated description" &&
+                e.TaskId == taskId),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }
