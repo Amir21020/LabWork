@@ -138,7 +138,9 @@ public sealed class TimeEntryService(
             t.Id,
             t.Date,
             t.Hours,
-            t.Description)).ToList();
+            t.Description ?? string.Empty,
+            t.Task.Id,
+            t.Task.Name)).ToList();
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)

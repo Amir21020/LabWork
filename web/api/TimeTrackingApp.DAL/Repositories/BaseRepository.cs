@@ -9,7 +9,7 @@ public class BaseRepository<TEntity>(AppDbContext context) : IBaseRepository<TEn
 {
     protected readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
 
-    public async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken ct = default)
+    public virtual async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken ct = default)
         => await _dbSet.AsNoTracking().ToListAsync(ct);
 
     public async Task<TEntity?> GetByIdAsync(Guid id, CancellationToken ct = default)
@@ -27,8 +27,7 @@ public class BaseRepository<TEntity>(AppDbContext context) : IBaseRepository<TEn
     }
 
     public async Task DeleteAsync(TEntity entity, CancellationToken ct = default)
-    {
-        _dbSet.Remove(entity);
+    {        _dbSet.Remove(entity);
         await context.SaveChangesAsync(ct);
     }
 }
