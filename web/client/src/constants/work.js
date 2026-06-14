@@ -1,0 +1,4 @@
+export const WORK_LIMITS = {
+    STANDARD_DAILY_HOURS: 8,
+    MAX_DAILY_HOURS: 24,
+};
