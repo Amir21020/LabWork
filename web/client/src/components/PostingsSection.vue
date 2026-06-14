@@ -117,7 +117,7 @@
     </Card>
 </template>
 <script setup>
-import { ref, computed, watch, watchEffect } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import { WORK_LIMITS } from '../constants/work'
 import { Pencil, Trash2 } from '@lucide/vue'
 import Card from './Card.vue' 

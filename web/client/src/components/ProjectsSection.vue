@@ -16,7 +16,7 @@
                     <input v-model="model.code" placeholder="Код" class="border w-1/2 p-1.5 text-xs rounded border-gray-300 bg-white" required />
                 </div>
 
-                <div v-if="editingId" class="flex gap-2">
+                <div v-if="isEditing" class="flex gap-2">
                     <button type="submit" :disabled="saving" class="w-1/2 text-center py-1 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white text-xs rounded font-semibold transition-colors">
                         {{ saving ? '...' : 'Сохранить' }}
                     </button>
@@ -63,7 +63,7 @@ import { ref, computed } from 'vue'
 import { Pencil, Trash2 } from '@lucide/vue'
 import { toast } from 'vue3-toastify'
 import { getErrorMessage } from '../utils/error'
-import { Card } from './index'
+import Card  from './Card.vue'
 import { useProject } from '../hooks/useProject'
 import { useConfirm } from '../hooks/useConfirm'
 import { projectApi } from '../api/projectApi'
@@ -72,7 +72,7 @@ const { isLoading, error, actionError, id, model, items, fetchAll, create, updat
 const { confirm } = useConfirm()
 
 const saving = ref(false)
-const editingId = computed(() => id.value)
+const isEditing = computed(() => id.value !== null)
 const fetchError = computed(() => error.value)
 
 const handleSave = async () => {
@@ -104,7 +104,7 @@ const handleToggleActive = async (p) => {
             isActive: !p.isActive,
         })
         await fetchAll()
-        toast.success(`Проект ${p.isActive ? 'архивирован' : 'активирован'}`)
+        toast.success(`Проект ${p.isActive ? 'неактивен' : 'активен'}`)
     } catch (e) {
         toast.error(getErrorMessage(e))
     } finally {

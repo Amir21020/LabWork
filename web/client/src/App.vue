@@ -8,13 +8,11 @@ import { useTask } from './hooks/useTask'
 const {
     items: projects,
     fetchAll: fetchProjects,
-    isLoading: projectsLoading,
 } = useProject()
 
 const {
     items: tasks,
     fetchAll: fetchTasks,
-    isLoading: tasksLoading,
 } = useTask()
 
 const isLoading = ref(true)

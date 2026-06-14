@@ -14,7 +14,7 @@
                 <input v-model="model.name" placeholder="Название задачи" class="w-full border p-1.5 text-xs rounded border-gray-300 bg-white" required />
                 <select v-model="model.projectId" :disabled="isEditing" class="w-full border p-1.5 text-xs rounded border-gray-300 bg-white disabled:bg-gray-200" :required="!isEditing">
                     <option value="">-- Выберите проект --</option>
-                    <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+                    <option v-for="p in activeProjects" :key="p.id" :value="p.id">{{ p.name }}</option>
                 </select>
 
                 <div v-if="isEditing" class="flex gap-2">
@@ -98,6 +98,10 @@ const handleSave = async () => {
     }
     saving.value = false
 }
+
+const activeProjects = computed(() => {
+    return props.projects.filter(p => p.isActive || (isEditing.value && p.id === model.projectId))
+})
 
 const handleCancel = () => {
     resetForm()
