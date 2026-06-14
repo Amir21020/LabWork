@@ -16,6 +16,15 @@ public static class ServiceExtensions
     public static IServiceCollection AddPresentationServices(
         this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy.WithOrigins("http://localhost:5173")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
 
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();

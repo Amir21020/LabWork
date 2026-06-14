@@ -20,6 +20,8 @@ app.UseHttpsRedirection();
 
 app.UseCustomRequestLogging();
 
+app.UseCors();
+
 app.MapControllers();
 
 app.Run();
