@@ -32,7 +32,7 @@ public sealed class TaskService(ILogger<TaskService> logger, IProjectRepository 
         var tasks = await taskRepository.GetAllAsync(ct);
 
         return tasks
-            .Select(t => new GetTasksResponse(t.Id, t.Name, t.Project.Id, t.Project.Name, t.IsActive))
+            .Select(t => new GetTasksResponse(t.Id, t.Name, t.ProjectId, t.IsActive))
             .ToList();
     }
 
