@@ -41,7 +41,7 @@ docker compose up --build
 
 **Backend:**
 
-1. Укажите вашу строку подключения к PostgreSQL в `web/ap/TimeTrackingApp.Api/appsettings.Development.json`
+1. Укажите вашу строку подключения к PostgreSQL в `web/api/TimeTrackingApp.Api/appsettings.Development.json`
 ```json
    {
      "ConnectionStrings": {
