@@ -2,9 +2,12 @@
   <Folder Name="/Элементы решения/">
     <File Path="web/compose.yml" />
   </Folder>
+  <Project Path="collection/Collection/Collection.csproj" Id="6830c912-ca77-409b-b92b-c51cb32defbd" />
+  <Project Path="datatypes/DataTypes/DataTypes.csproj" Id="1e4bf29e-7268-4540-af52-3c3a83096885" />
+  <Project Path="oop/Oop/Oop.csproj" Id="72f49353-1d66-4d85-ab0a-65c707fe48db" />
   <Project Path="orm/Orm.csproj" Id="ccddbe92-bc8e-442f-bcd6-57d76533d915" />
-  <Project Path="web/api/TimeTrackingApp.Tests/TimeTrackingApp.Tests.csproj"  />
   <Project Path="web/api/TimeTrackingApp.Api/TimeTrackingApp.Api.csproj" Id="56a31780-bc6a-4861-a2d9-161f78149a73" />
   <Project Path="web/api/TimeTrackingApp.BL/TimeTrackingApp.BL.csproj" Id="afb2028d-e0a9-4213-b6e7-e9abc5fd6e36" />
   <Project Path="web/api/TimeTrackingApp.DAL/TimeTrackingApp.DAL.csproj" Id="fb5505ab-2d25-4e31-b668-779219e159e4" />
+  <Project Path="web/api/TimeTrackingApp.Tests/TimeTrackingApp.Tests.csproj" />
 </Solution>
