@@ -86,7 +86,7 @@
                             </div>
                             <p class="font-bold text-gray-800 mt-1">
                                 {{ w.taskName || 'Неизвестно' }}
-                                <span v-if="!isTaskActive(w.taskId)" class="text-[9px] text-red-600 font-bold ml-1">(Архивная)</span>
+                                <span v-if="!isTaskActive(w.taskId)" class="text-[9px] text-red-600 font-bold ml-1">(Неактивная)</span>
                             </p>
                             <p class="text-[10px] text-gray-400">
                                 Проект: {{ getProjectNameForTask(w.taskId) || '-' }}
