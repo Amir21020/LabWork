@@ -6,11 +6,34 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password123
-      POGTGRES_DB: time_tracker_db
+      POSTGRES_DB: time_tracker_db
     ports:
       - "5435:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+  api:
+    build:
+      context: api
+      dockerfile: TimeTrackingApp.Api/Dockerfile
+    container_name: time_tracking_api
+    restart: always
+    depends_on:
+      - db
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=time_tracker_db;Username=postgres;Password=password123"
+    ports:
+      - "5163:8080"
+  client:
+    build:
+      context: client
+      dockerfile: dockerfile
+    container_name: time_tracker_client
+    restart: always
+    depends_on:
+      - api
+    ports:
+      - 80:80
 
 volumes:
   pgdata:
