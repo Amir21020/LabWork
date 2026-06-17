@@ -6,7 +6,7 @@ using TimeTrackingApp.DAL.Interfaces;
 
 namespace TimeTrackingApp.BL.Services;
 
-public sealed class TaskService(ILogger<TaskService> logger, IProjectRepository projectRepository, ITaskRepository taskRepository) : ITaskService
+public sealed class TaskService(ILogger<TaskService> logger, IProjectRepository projectRepository, IBaseRepository<ProjectTaskEntity> taskRepository) : ITaskService
 {
     public async Task CreateAsync(CreateTaskRequest request, CancellationToken ct = default)
     {
@@ -29,7 +29,7 @@ public sealed class TaskService(ILogger<TaskService> logger, IProjectRepository 
     {
         logger.LogInformation("Fetching all tasks");
 
-        var tasks = await taskRepository.GetAllWithProjectsAsync(ct);
+        var tasks = await taskRepository.GetAllAsync(ct);
 
         return tasks
             .Select(t => new GetTasksResponse(t.Id, t.Name, t.Project.Id, t.Project.Name, t.IsActive))

@@ -7,7 +7,7 @@ using TimeTrackingApp.DAL.Interfaces;
 namespace TimeTrackingApp.BL.Services;
 
 public sealed class TimeEntryService(
-    ITaskRepository taskRepository,
+    IBaseRepository<ProjectTaskEntity> taskRepository,
     ITimeEntryRepository timeEntryRepository,
     ILogger<TimeEntryService> logger) : ITimeEntryService
 {

@@ -16,9 +16,6 @@ public sealed class TimeEntryRepository(AppDbContext context) : BaseRepository<T
         .Where(te => te.Date == date)
         .ToListAsync(ct);
 
-    public async Task<IReadOnlyList<TimeEntryEntity>> GetByDayAsync(int day, int month, CancellationToken ct = default)
-        => await _dbSet.Include(te => te.Task).Where(t => t.Date.Day == day && t.Date.Month == month).ToListAsync(ct);
-
     public async Task<IReadOnlyList<TimeEntryEntity>> GetByMonthAsync(int month, int year, CancellationToken ct = default)
         => await _dbSet.Include(te => te.Task).Where(t => t.Date.Month == month && t.Date.Year == year).ToListAsync(ct);
 

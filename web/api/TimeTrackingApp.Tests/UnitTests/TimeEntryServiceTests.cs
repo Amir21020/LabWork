@@ -14,7 +14,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Creation_fails_when_task_does_not_exist()
     {
-        var taskRepositoryMock = new Mock<ITaskRepository>();
+        var taskRepositoryMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepositoryMock = new Mock<ITimeEntryRepository>();
 
         var sut = new TimeEntryService(
@@ -39,7 +39,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Creation_fails_when_task_is_inactive()
     {
-        var taskRepositoryMock = new Mock<ITaskRepository>();
+        var taskRepositoryMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepositoryMock = new Mock<ITimeEntryRepository>();
 
         var sut = new TimeEntryService(
@@ -66,7 +66,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Creation_fails_when_daily_limit_is_exceeded()
     {
-        var taskRepositoryMock = new Mock<ITaskRepository>();
+        var taskRepositoryMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepositoryMock = new Mock<ITimeEntryRepository>();
 
         var sut = new TimeEntryService(
@@ -98,7 +98,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Time_entry_is_successfully_created()
     {
-        var taskRepositoryMock = new Mock<ITaskRepository>();
+        var taskRepositoryMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepositoryMock = new Mock<ITimeEntryRepository>();
 
         var sut = new TimeEntryService(
@@ -135,9 +135,9 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Entries_are_retrieved_for_specific_date()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepositoryMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
-        var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
+        var sut = new TimeEntryService(taskRepositoryMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
         var date = DateOnly.Parse("2026-06-01");
         var request = new GetTimeEntriesRequest(Date: date, Month: null, Year: null);
@@ -160,7 +160,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Entries_are_retrieved_for_entire_month()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -183,7 +183,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task All_entries_are_returned_when_year_is_missing_from_request()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -206,7 +206,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Retrieved_entries_are_mapped_to_response_dto()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -232,7 +232,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Update_fails_when_time_entry_not_found()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -254,7 +254,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Update_fails_when_current_task_is_inactive_and_task_id_changes()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -288,7 +288,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Update_succeeds_when_current_task_inactive_but_task_id_unchanged()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -329,7 +329,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Update_fails_when_new_task_does_not_exist()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -367,7 +367,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Update_fails_when_new_task_is_inactive()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -408,7 +408,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Update_fails_when_daily_limit_exceeded()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -445,7 +445,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Update_succeeds_and_updates_fields()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -488,7 +488,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Delete_succeeds_when_entry_exists()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
@@ -510,7 +510,7 @@ public sealed class TimeEntryServiceTests
     [Fact]
     public async Task Delete_does_nothing_when_entry_not_found()
     {
-        var taskRepoMock = new Mock<ITaskRepository>();
+        var taskRepoMock = new Mock<IBaseRepository<ProjectTaskEntity>>();
         var timeEntryRepoMock = new Mock<ITimeEntryRepository>();
         var sut = new TimeEntryService(taskRepoMock.Object, timeEntryRepoMock.Object, NullLogger<TimeEntryService>.Instance);
 
