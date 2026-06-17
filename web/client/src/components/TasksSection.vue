@@ -133,7 +133,7 @@ const handleToggleActive = async (t) => {
             isActive: !t.isActive,
         })
         await fetchAll()
-        toast.success(`Задача ${t.isActive ? 'архивирована' : 'активирована'}`)
+        toast.success(`Задача ${t.isActive ? 'неактивная' : 'активная'}`)
     } catch (e) {
         toast.error(getErrorMessage(e))
     } finally {
