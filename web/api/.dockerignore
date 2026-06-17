@@ -10,3 +10,4 @@
 **/.DS_Store
 **/appsettings.Development.json
 **/node_modules
+**/TimeTrackingApp.Tests
