@@ -14,20 +14,21 @@ export function useTimeEntry() {
         taskId: '',
     })
 
-    const items = ref([])
+const items = ref([])
 
-    const fetchAll = async (params = {}) => {
-        isLoading.value = true
-        error.value = null
-        try {
-            const response = await timeEntryApi.getAll(params)
-            items.value = response.data || response
-        } catch (e) {
-            error.value = e
-        } finally {
-            isLoading.value = false
-        }
+const fetchAll = async (params = {}) => {
+    isLoading.value = true
+    error.value = null
+    try {
+        const response = await timeEntryApi.getAll(params)
+        const data = response.data ?? response
+        items.value = Array.isArray(data) ? data : []
+    } catch (e) {
+        error.value = e
+    } finally {
+        isLoading.value = false
     }
+}
 
     const create = async () => {
         isLoading.value = true

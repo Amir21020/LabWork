@@ -12,7 +12,8 @@ export function useCrud(api) {
         error.value = null
         try {
             const response = await api.getAll()
-            items.value = response.data || response
+            const data = response.data ?? response
+            items.value = Array.isArray(data) ? data : []
         } catch (e) {
             error.value = e
         } finally {
