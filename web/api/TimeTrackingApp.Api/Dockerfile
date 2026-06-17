@@ -6,7 +6,7 @@ WORKDIR /src
 COPY TimeTrackingApp.Api/*.csproj TimeTrackingApp.Api/
 COPY TimeTrackingApp.BL/*.csproj TimeTrackingApp.BL/
 COPY TimeTrackingApp.DAL/*.csproj TimeTrackingApp.DAL/
-RUN dotnet restore
+RUN dotnet restore "TimeTrackingApp.Api/TimeTrackingApp.Api.csproj"
 
 COPY . .
 RUN dotnet publish TimeTrackingApp.Api/TimeTrackingApp.Api.csproj -c Release -o /app/publish
