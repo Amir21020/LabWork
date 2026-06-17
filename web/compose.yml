@@ -28,6 +28,9 @@ services:
     build:
       context: client
       dockerfile: dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_APP_NAME: TimeTracker
     container_name: time_tracker_client
     restart: always
     depends_on:
