@@ -5,7 +5,7 @@
         </div>
 
         <div v-else-if="fetchError" class="text-xs text-red-600 bg-red-50 p-3 rounded-xl border border-red-200">
-            Ошибка загрузки: {{ fetchError.message }}
+            Ошибка загрузки: {{ getErrorMessage(fetchError) }}
             <button @click="loadEntries" class="ml-2 underline font-semibold">Повторить</button>
         </div>
 
@@ -46,7 +46,7 @@
                 <form @submit.prevent="handleSavePosting" class="space-y-2 text-xs">
                     <div>
                         <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Задача *</label>
-                        <select v-model="form.taskId" required :disabled="isTaskFieldDisabled" class="w-full border p-1.5 rounded bg-gray-50 disabled:bg-gray-200">
+                        <select v-model="form.taskId" required :disabled="isTaskFieldDisabled" class="w-full border p-1.5 rounded bg-gray-50 disabled:bg-gray-200" :class="{ 'border-red-400': fieldErrors?.taskId }">
                             <option value="">-- Выбрать задачу --</option>
                             <option v-for="t in availableTasks" :key="t.id" :value="t.id">
                                 {{ t.name }} {{ !t.isActive ? '(Неактивная)' : '' }}
@@ -60,12 +60,14 @@
                         </div>
                         <div>
                             <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Часы *</label>
-                            <input type="number" min="1" max="24" step="1" v-model.number="form.hours" required class="w-full border p-1.5 rounded bg-gray-50" />
+                            <input type="number" min="1" max="24" step="1" v-model.number="form.hours" required class="w-full border p-1.5 rounded bg-gray-50" :class="{ 'border-red-400': fieldErrors?.hours }" />
+                            <span v-if="fieldErrors?.hours" class="text-red-600 text-[10px]">{{ fieldErrors.hours }}</span>
                         </div>
                     </div>
                     <div>
                         <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Описание работы *</label>
-                        <input type="text" v-model="form.description" required placeholder="Что сделали..." class="w-full border p-1.5 rounded bg-gray-50" />
+                        <input type="text" v-model="form.description" required placeholder="Что сделали..." class="w-full border p-1.5 rounded bg-gray-50" :class="{ 'border-red-400': fieldErrors?.description }" />
+                        <span v-if="fieldErrors?.description" class="text-red-600 text-[10px]">{{ fieldErrors.description }}</span>
                     </div>
                     <div class="flex justify-end gap-1.5 pt-1">
                         <button type="button" @click="closeForm" class="px-2.5 py-1 border rounded text-[10px]">Отмена</button>
@@ -85,7 +87,7 @@
                                 <span class="font-black text-gray-900">{{ w.hours }} ч.</span>
                             </div>
                             <p class="font-bold text-gray-800 mt-1">
-                                {{ w.taskName || 'Неизвестно' }}
+                                {{ getTaskName(w.taskId) || 'Неизвестно' }}
                                 <span v-if="!isTaskActive(w.taskId)" class="text-[9px] text-red-600 font-bold ml-1">(Неактивная)</span>
                             </p>
                             <p class="text-[10px] text-gray-400">
@@ -123,7 +125,7 @@ import { Pencil, Trash2 } from '@lucide/vue'
 import Card from './Card.vue' 
 import { useTimeEntry } from '../hooks/useTimeEntry'
 import { toast } from 'vue3-toastify'
-import { getErrorMessage } from '../utils/error'
+import { getErrorMessage, getDefaultErrorMessage, getFieldErrors } from '../utils/error'
 import { useConfirm } from '../hooks/useConfirm'
 import { getTodayDateString, parseMonthAndYear } from '../utils/date'
 
@@ -149,6 +151,7 @@ const filterMode = ref('day')
 const selectedDate = ref(getTodayDateString())
 const showForm = ref(false)
 const formError = ref(null)
+const fieldErrors = ref(null)
 
 const form = ref({
     taskId: '',
@@ -183,6 +186,11 @@ const setFilter = (mode) => {
 const isTaskActive = (taskId) => {
     const task = props.tasks.find(t => t.id === taskId)
     return task ? task.isActive : false
+}
+
+const getTaskName = (taskId) => {
+    const task = props.tasks.find(t => t.id === taskId)
+    return task ? task.name : null
 }
 
 const getProjectNameForTask = (taskId) => {
@@ -242,6 +250,7 @@ const openAddForm = () => {
         description: '',
     }
     formError.value = null
+    fieldErrors.value = null
     showForm.value = true
 }
 
@@ -254,6 +263,7 @@ const openEditForm = (entry) => {
         description: entry.description,
     }
     formError.value = null
+    fieldErrors.value = null
     showForm.value = true
 }
 
@@ -261,10 +271,12 @@ const closeForm = () => {
     showForm.value = false
     editingId.value = null
     formError.value = null
+    fieldErrors.value = null
 }
 
 const handleSavePosting = async () => {
     formError.value = null
+    fieldErrors.value = null
     saving.value = true
 
     const currentSum = getDailySum(form.value.date, editingId.value)
@@ -287,7 +299,12 @@ const handleSavePosting = async () => {
             closeForm()
             await loadEntries()
         } else if (actionError.value) {
-            formError.value = getErrorMessage(actionError.value)
+            fieldErrors.value = getFieldErrors(actionError.value)
+            if (!fieldErrors.value) {
+                toast.error(getErrorMessage(actionError.value))
+            } else {
+                toast.error(getDefaultErrorMessage())
+            }
         }
     } else {
         const ok = await create()
@@ -296,7 +313,12 @@ const handleSavePosting = async () => {
             closeForm()
             await loadEntries()
         } else if (actionError.value) {
-            formError.value = getErrorMessage(actionError.value)
+            fieldErrors.value = getFieldErrors(actionError.value)
+            if (!fieldErrors.value) {
+                toast.error(getErrorMessage(actionError.value))
+            } else {
+                toast.error(getDefaultErrorMessage())
+            }
         }
     }
     saving.value = false

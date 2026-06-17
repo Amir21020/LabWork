@@ -5,15 +5,21 @@
         </div>
 
         <div v-else-if="fetchError" class="text-xs text-red-600 bg-red-50 p-3 rounded-xl border border-red-200">
-            Ошибка загрузки: {{ fetchError.message }}
+            Ошибка загрузки: {{ getErrorMessage(fetchError) }}
             <button @click="fetchAll" class="ml-2 underline font-semibold">Повторить</button>
         </div>
 
         <template v-else>
             <form @submit.prevent="handleSave" class="space-y-2 bg-gray-50 p-3 rounded-xl border border-dashed border-gray-300">
                 <div class="flex gap-2">
-                    <input v-model="model.name" placeholder="Название" class="border w-1/2 p-1.5 text-xs rounded border-gray-300 bg-white" required />
-                    <input v-model="model.code" placeholder="Код" class="border w-1/2 p-1.5 text-xs rounded border-gray-300 bg-white" required />
+                    <div class="w-1/2">
+                        <input v-model="model.name" placeholder="Название" class="border w-full p-1.5 text-xs rounded border-gray-300 bg-white" :class="{ 'border-red-400': fieldErrors?.name }" required />
+                        <span v-if="fieldErrors?.name" class="text-red-600 text-[10px]">{{ fieldErrors.name }}</span>
+                    </div>
+                    <div class="w-1/2">
+                        <input v-model="model.code" placeholder="Код" class="border w-full p-1.5 text-xs rounded border-gray-300 bg-white" :class="{ 'border-red-400': fieldErrors?.code }" required />
+                        <span v-if="fieldErrors?.code" class="text-red-600 text-[10px]">{{ fieldErrors.code }}</span>
+                    </div>
                 </div>
 
                 <div v-if="isEditing" class="flex gap-2">
@@ -62,7 +68,7 @@
 import { ref, computed } from 'vue'
 import { Pencil, Trash2 } from '@lucide/vue'
 import { toast } from 'vue3-toastify'
-import { getErrorMessage } from '../utils/error'
+import { getErrorMessage, getDefaultErrorMessage, getFieldErrors } from '../utils/error'
 import Card  from './Card.vue'
 import { useProject } from '../hooks/useProject'
 import { useConfirm } from '../hooks/useConfirm'
@@ -72,11 +78,13 @@ const { isLoading, error, actionError, id, model, items, fetchAll, create, updat
 const { confirm } = useConfirm()
 
 const saving = ref(false)
+const fieldErrors = ref(null)
 const isEditing = computed(() => id.value !== null)
 const fetchError = computed(() => error.value)
 
 const handleSave = async () => {
     saving.value = true
+    fieldErrors.value = null
     let ok
     if (id.value) {
         ok = await update()
@@ -86,12 +94,18 @@ const handleSave = async () => {
         if (ok) toast.success('Проект создан')
     }
     if (!ok && actionError.value) {
-        toast.error(getErrorMessage(actionError.value))
+        fieldErrors.value = getFieldErrors(actionError.value)
+        if (!fieldErrors.value) {
+            toast.error(getErrorMessage(actionError.value))
+        } else {
+            toast.error(getDefaultErrorMessage())
+        }
     }
     saving.value = false
 }
 
 const handleCancel = () => {
+    fieldErrors.value = null
     resetForm()
 }
 
