@@ -5,6 +5,5 @@ public sealed record TimeEntryResponse(
     DateOnly Date,
     int Hours,
     string Description,
-    Guid TaskId,
-    string TaskName
+    Guid TaskId
 );
